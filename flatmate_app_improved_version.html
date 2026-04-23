@@ -1,0 +1,134 @@
+<!-- Key improvements added:
+1. LocalStorage persistence (prefs, saved, going)
+2. Working search
+3. Working sorting (soonest, free, on campus)
+4. Cleaner state handling
+5. Mobile responsiveness improvements (basic)
+-->
+
+<script>
+// --- STATE WITH PERSISTENCE ---
+let userPrefs = JSON.parse(localStorage.getItem('prefs')) || [];
+let savedIds = new Set(JSON.parse(localStorage.getItem('saved')) || []);
+let goingIds = new Set(JSON.parse(localStorage.getItem('going')) || []);
+let activeFilter = 'all';
+let searchQuery = '';
+let sortMode = 'soonest';
+
+function persist(){
+  localStorage.setItem('prefs', JSON.stringify(userPrefs));
+  localStorage.setItem('saved', JSON.stringify([...savedIds]));
+  localStorage.setItem('going', JSON.stringify([...goingIds]));
+}
+
+// --- SEARCH ---
+function handleSearch(input){
+  searchQuery = input.toLowerCase();
+  renderGrid('home-grid','home');
+  renderGrid('explore-grid','explore');
+}
+
+// --- SORTING ---
+function applySort(events){
+  if(sortMode==='soonest') return events.sort((a,b)=>a.day-b.day);
+  if(sortMode==='free') return events.filter(e=>e.price.toLowerCase().includes('free'));
+  if(sortMode==='campus') return events.filter(e=>e.dist==='On campus');
+  return events;
+}
+
+// --- UPDATED FILTER + SEARCH PIPELINE ---
+function getFilteredEvents(type){
+  let evts = activeFilter==='all' ? EVENTS : EVENTS.filter(e=>e.cat===activeFilter || e.tags.includes(activeFilter));
+
+  if(type==='home' && !userPrefs.includes('all') && activeFilter==='all'){
+    evts = evts.filter(e=>e.tags.some(t=>userPrefs.includes(t)));
+  }
+
+  if(searchQuery){
+    evts = evts.filter(e =>
+      e.title.toLowerCase().includes(searchQuery) ||
+      e.venue.toLowerCase().includes(searchQuery)
+    );
+  }
+
+  return applySort(evts);
+}
+
+// --- UPDATED GRID RENDER ---
+function renderGrid(gridId,type){
+  const grid=document.getElementById(gridId);
+  grid.innerHTML='';
+
+  let evts = getFilteredEvents(type);
+
+  if(evts.length===0){
+    grid.innerHTML='<div class="no-results">No matching events</div>';
+    return;
+  }
+
+  evts.forEach(ev=>{
+    const saved=savedIds.has(ev.id);
+    const going=goingIds.has(ev.id);
+
+    const card=document.createElement('div');
+    card.className='event-card';
+
+    card.innerHTML=`
+      <div class="date-box ${ev.color}">
+        <div class="dm">${ev.month}</div>
+        <div class="dd">${ev.day}</div>
+      </div>
+      <div class="einfo">
+        <div class="etitle">${ev.title}</div>
+        <div class="evenue">📍 ${ev.venue}</div>
+      </div>
+      <div class="eright">
+        <button onclick="toggleGoingCard(event,${ev.id},this)">${going?'✓':'+'}</button>
+        <button onclick="toggleSave(event,${ev.id})">${saved?'♥':'♡'}</button>
+      </div>`;
+
+    grid.appendChild(card);
+  });
+}
+
+// --- SAVE / GOING WITH PERSISTENCE ---
+function toggleSave(e,id){
+  e.stopPropagation();
+  if(savedIds.has(id)) savedIds.delete(id);
+  else savedIds.add(id);
+  persist();
+  renderGrid('home-grid','home');
+}
+
+function toggleGoingCard(e,id,btn){
+  e.stopPropagation();
+  if(goingIds.has(id)) goingIds.delete(id);
+  else goingIds.add(id);
+  persist();
+  renderGrid('home-grid','home');
+}
+
+// --- SORT DROPDOWN HOOK ---
+document.addEventListener('change', (e)=>{
+  if(e.target.classList.contains('sort-select')){
+    const val = e.target.value;
+    if(val.includes('Soonest')) sortMode='soonest';
+    if(val.includes('Free')) sortMode='free';
+    if(val.includes('campus')) sortMode='campus';
+    renderGrid('home-grid','home');
+    renderGrid('explore-grid','explore');
+  }
+});
+
+// --- BASIC MOBILE IMPROVEMENT ---
+const style = document.createElement('style');
+style.innerHTML = `
+@media (max-width: 768px){
+  header{padding:16px}
+  main{padding:16px}
+  .event-grid{grid-template-columns:1fr}
+  .featured-strip{grid-template-columns:1fr}
+}`;
+document.head.appendChild(style);
+
+</script>
