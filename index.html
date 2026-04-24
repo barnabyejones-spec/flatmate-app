@@ -21,7 +21,7 @@ h1{margin-bottom:20px;}
   box-shadow:0 2px 10px rgba(0,0,0,0.05);
 }
 </style>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 
 <body>
@@ -32,21 +32,51 @@ h1{margin-bottom:20px;}
 
 <script>
 
-// SIMPLE TEST DATA (this makes sure site works)
-const EVENTS = [
-  {
-    title: "Rescue Rooms Club Night",
-    date: "Fri 2 May",
-    venue: "Rescue Rooms",
-    price: "Free"
-  },
-  {
-    title: "Careers Fair",
-    date: "Mon 5 May",
-    venue: "University Park",
-    price: "Free"
+let EVENTS = [];
+
+const SUPABASE_URL = "PASTE_YOUR_URL_HERE";
+const SUPABASE_KEY = "PASTE_YOUR_KEY_HERE";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// LOAD EVENTS FROM DATABASE
+async function loadEvents(){
+  const { data, error } = await client
+    .from("events")
+    .select("*");
+
+  if(error){
+    console.error(error);
+    document.getElementById("events").innerHTML = "Error loading events";
+    return;
   }
-];
+
+  EVENTS = data;
+  renderEvents();
+}
+
+// RENDER EVENTS
+function renderEvents(){
+  const container = document.getElementById("events");
+  container.innerHTML = "";
+
+  EVENTS.forEach(e => {
+    const div = document.createElement("div");
+    div.className = "event";
+
+    div.innerHTML = `
+      <h3>${e.title}</h3>
+      <p>📅 ${e.date}</p>
+      <p>📍 ${e.venue}</p>
+      <p>🎟 ${e.price}</p>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+// RUN
+loadEvents();
 
 // RENDER FUNCTION
 function renderEvents(){
@@ -72,7 +102,27 @@ function renderEvents(){
 renderEvents();
 
 </script>
+const SUPABASE_URL = "https://lugztwihcxhuhxyrrfcl.supabase.co/";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Z3p0d2loY3hodWh4eXJyZmNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzMyNzgsImV4cCI6MjA5MjU0OTI3OH0.NIVwQonzoeAgAWjNHfaxQnXbeE8Xn1XilylUHJQc_Uw";
 
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function loadEvents(){
+  const { data, error } = await client
+    .from("events")
+    .select("*");
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  EVENTS = data;
+
+  renderApp(); // IMPORTANT: this makes your UI show
+}
+
+loadEvents();
 </body>
 </html>
 
