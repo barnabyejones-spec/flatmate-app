@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -21,6 +20,7 @@ h1{margin-bottom:20px;}
   box-shadow:0 2px 10px rgba(0,0,0,0.05);
 }
 </style>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 
@@ -28,18 +28,19 @@ h1{margin-bottom:20px;}
 
 <h1>Flatmate — Nottingham Events</h1>
 
-<div id="events"></div>
+<div id="events">Loading events...</div>
 
 <script>
 
-let EVENTS = [];
-
-const SUPABASE_URL = "PASTE_YOUR_URL_HERE";
-const SUPABASE_KEY = "PASTE_YOUR_KEY_HERE";
+// ✅ YOUR REAL KEYS
+const SUPABASE_URL = "https://lugztwihcxhuhxyrrfcl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // keep your full key here
 
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// LOAD EVENTS FROM DATABASE
+let EVENTS = [];
+
+// LOAD EVENTS
 async function loadEvents(){
   const { data, error } = await client
     .from("events")
@@ -58,71 +59,35 @@ async function loadEvents(){
 // RENDER EVENTS
 function renderEvents(){
   const container = document.getElementById("events");
-  container.innerHTML = "";
 
-  EVENTS.forEach(e => {
-    const div = document.createElement("div");
-    div.className = "event";
-
-    div.innerHTML = `
-      <h3>${e.title}</h3>
-      <p>📅 ${e.date}</p>
-      <p>📍 ${e.venue}</p>
-      <p>🎟 ${e.price}</p>
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-// RUN
-loadEvents();
-
-// RENDER FUNCTION
-function renderEvents(){
-  const container = document.getElementById("events");
-  container.innerHTML = "";
-
-  EVENTS.forEach(e => {
-    const div = document.createElement("div");
-    div.className = "event";
-
-    div.innerHTML = `
-      <h3>${e.title}</h3>
-      <p>📅 ${e.date}</p>
-      <p>📍 ${e.venue}</p>
-      <p>🎟 ${e.price}</p>
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-// RUN IT
-renderEvents();
-
-</script>
-const SUPABASE_URL = "https://lugztwihcxhuhxyrrfcl.supabase.co/";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Z3p0d2loY3hodWh4eXJyZmNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzMyNzgsImV4cCI6MjA5MjU0OTI3OH0.NIVwQonzoeAgAWjNHfaxQnXbeE8Xn1XilylUHJQc_Uw";
-
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-async function loadEvents(){
-  const { data, error } = await client
-    .from("events")
-    .select("*");
-
-  if(error){
-    console.error(error);
+  if(EVENTS.length === 0){
+    container.innerHTML = "No events yet — add one in Supabase!";
     return;
   }
 
-  EVENTS = data;
+  container.innerHTML = "";
 
-  renderApp(); // IMPORTANT: this makes your UI show
+  EVENTS.forEach(e => {
+    const div = document.createElement("div");
+    div.className = "event";
+
+    div.innerHTML = `
+      <h3>${e.title || "No title"}</h3>
+      <p>📅 ${e.date || "No date"}</p>
+      <p>📍 ${e.venue || "No venue"}</p>
+      <p>🎟 ${e.price || "Free"}</p>
+    `;
+
+    container.appendChild(div);
+  });
 }
 
+// RUN APP
 loadEvents();
+
+</script>
+
 </body>
 </html>
+
 
